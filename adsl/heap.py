@@ -35,7 +35,8 @@ class BinaryHeap(object):
             cval = self.array[cpos]
             pval = self.array[ppos]
 
-            if self.compare(cval, pval) < 0:
+            if cval < pval:
+            #if self.compare(cval, pval) < 0:
                 self.array[cpos] = pval
                 self.array[ppos] = cval
                 cpos = ppos
@@ -64,8 +65,9 @@ class BinaryHeap(object):
 
         while lpos < ln:
 
-            if rpos >= ln or self.compare(self.array[lpos],
-                                          self.array[rpos]) < 0:
+            # if rpos >= ln or self.compare(self.array[lpos],
+            #                               self.array[rpos]) < 0:
+            if rpos >= ln or self.array[lpos] < self.array[rpos]:
                 # Go down the left branch
                 self.array[i] = self.array[lpos]
                 i = lpos
