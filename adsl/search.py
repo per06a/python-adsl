@@ -5,6 +5,7 @@ Various searching, selecting and finding algorithms
 """
 
 ##### STDLIB
+import sys
 
 ##### 3RD PARTY
 
@@ -12,6 +13,8 @@ Various searching, selecting and finding algorithms
 import adsl.common
 
 ##### INIT AND DECLARATIONS
+if sys.version_info.major >= 3:
+    xrange = range
 
 ##### CLASSES AND FUNCTIONS
 
@@ -121,5 +124,97 @@ def quickselect(array, K):
         else:
             # The K-th element must be in the upper range relative to pivot
             left = pivot + 1
+
+    return res
+
+def find_all_N(string, words, N, res_list=None):
+    
+    """
+    Find all words of some fixed length N using Rabin-Karp.
+
+    TODO: implement Rolling Hash to get expected running time of O(M+N)
+
+    """
+    for word in words:
+        if len(word) != N:
+            raise ValueError("{} with length = {} is not of required length = {}".format(word,
+                                                                                         len(word),
+                                                                                         N))
+    
+    if res_list is None:
+        res = []
+    else:
+        res = res_list
+
+    M = len(string)
+
+    # Table of hashes to words
+    table = {hash(word): word for word in words}
+
+    # NOTE: using xrange (for Python2) for this since M can be larger,
+    # and xrange is an iterator. For Python3, xrange is defined in this module as range
+    for i in xrange(0, M - N + 1):
+        
+        sub = string[i:i+N]
+
+        hash_sub = hash(sub)
+        
+        if hash_sub in table:
+            word = table[hash_sub]
+
+            # Compare the words char-by-char
+            match = True
+
+            # Use range since N is typically small
+            for j in range(0, N):
+                if sub[j] != word[j]:
+                    match = False
+                    break
+
+            if match:
+                # (word, start, end)
+                res.append((word, i, i+N))
+        
+    return res
+
+def find_all(string, words):
+    """
+    Find all matching words in some string by bucket-sorting them by
+    size and running all strings of the same length through
+    Rabin-Karp.
+
+    Let:
+    M = len(string)
+    N = the longest length of any word in words
+    K = the total number of different word lengths
+
+    The expected/best-case running time of Rabin-Karp is O(M+N). We
+    call it at most K times. This gives us an expected running time of
+    O(K*(M+N)).
+
+    We can usually treat K as a constant. This reduces the expected
+    running time back down to O(C*(M+N)) = O(M+N). For example, for
+    the English dictionary locatd at /usr/shard/dict/words, K = 23.
+
+    """
+
+    res = []
+
+    # Do a bucket sort of words by their length.
+    table = {}
+    
+    for word in words:
+        ln = len(word)
+        if ln not in table:
+            table[ln] = []
+
+        table[ln].append(word)
+
+    # Now use find_all_N with the same result list
+    for N in table:
+        # These are all the words of length N
+        words_N = table[N]
+
+        find_all_N(string, words_N, N, res_list=res)
 
     return res
