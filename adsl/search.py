@@ -207,7 +207,7 @@ def find_all_N(string, words, N, res_list=None, P=31):
     table = {hash_str(word, N): word for word in words}
     # Compute the powers table for some prime P. This lets us compute
     # the rolling hash in expected constant time
-    pow_table = {}
+    pow_table = [None for x in range(0, N)]
     i = 0
     mult = 1
 
