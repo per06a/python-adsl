@@ -127,12 +127,32 @@ def quickselect(array, K):
 
     return res
 
-def find_all_N(string, words, N, res_list=None):
+def hash_substr(string, i, j, prime=31):
+
+    res = 0
+    mult = 1
+    N = j - i + 1
+    i = N - 1
+
+    while i >= 0:
+        res += (mult * ord(string[i]))
+        mult *= prime
+        i -= 1
+
+    return res
+
+def hash_str(word, N, prime=31):
+    return hash_substr(word, 0, N-1, prime=prime)
+
+def find_all_N(string, words, N, res_list=None, P=31):
     
     """
     Find all words of some fixed length N using Rabin-Karp.
 
     TODO: implement Rolling Hash to get expected running time of O(M+N)
+
+    NOTE: let us be thankful that ord() takes into account Unicode:
+    https://docs.python.org/2/library/functions.html#ord
 
     """
     for word in words:
@@ -149,25 +169,51 @@ def find_all_N(string, words, N, res_list=None):
     M = len(string)
 
     # Table of hashes to words
-    table = {hash(word): word for word in words}
+    table = {hash_str(word, N): word for word in words}
+    # Compute the powers table for some prime P. This lets us compute
+    # the rolling hash in expected constant time
+    pow_table = {}
+    i = 0
+    mult = 1
 
+    while i < N:
+        pow_table[i] = mult
+        mult *= P
+        i += 1
+
+    rhash = None
     # NOTE: using xrange (for Python2) for this since M can be larger,
     # and xrange is an iterator. For Python3, xrange is defined in this module as range
     for i in xrange(0, M - N + 1):
-        
-        sub = string[i:i+N]
 
-        hash_sub = hash(sub)
+        # Rolling hash function of Rabin-Karp. This is based on the
+        # observation that H(i+1) can be computed from H(i) in
+        # constant time.
+        if rhash is not None:
+            # Starting term of the previous hash value.
+            t1 = ord(string[i-1]) * pow_table[N-1]
+            # Ending term of the current hash value. It is multiplied
+            # by P^0, which is always 1. So just omit for brevity.
+            t2 = ord(string[i+N-1])
+            rhash = ((rhash - t1) * P) + t2
+        else:
+            rhash = hash_substr(string, i, i+N-1)
         
-        if hash_sub in table:
-            word = table[hash_sub]
+        if rhash in table:
+            word = table[rhash]
 
-            # Compare the words char-by-char
+            # We have a collision via hashing. By the Pigeonhole
+            # principle, if we map a set of cardinality M to a set of
+            # cardinality N and M > N, then there must exist at least
+            # one bucket containing at least two elements. In other
+            # words, two different strings can map to the same integer
+            # via hashing. So compare the substring char-by-char to
+            # make sure we have a match.
             match = True
 
             # Use range since N is typically small
             for j in range(0, N):
-                if sub[j] != word[j]:
+                if string[j+i] != word[j]:
                     match = False
                     break
 
