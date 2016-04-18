@@ -128,6 +128,43 @@ def quickselect(array, K):
     return res
 
 def hash_substr(string, i, j, prime=31):
+    """
+    Map a sub-sequence of characters to an integer. This works by
+    mapping each individual character to an integer via ord(), then
+    multiplying it by a prime number P raised to some power.
+
+    Ex:
+    Lets hash the string "cat"
+    ord('t') = 116
+    ord('a') = 97
+    ord('c') = 99
+
+    Let P = prime = 31. Then hash_substr("cat") is:
+    ord('c')*pow(P, 2) + ord('a')*pow(P, 1) + ord('t')*pow(P, 0)
+
+    Args:
+    string (string): the sequence of characters containing some subsequence we want to hash
+
+    i (int): the starting index of the subsequence to hash
+
+    j (int): the ending index of the subsequence to hash
+
+    prime (int): Optional. The prime number to multiply each ord(character) by
+
+    Returns:
+
+    (int) The integer representation of the character subsequence
+    starting at string[i] and ending at string[j]
+
+    """
+    if i < 0:
+        raise IndexError("i must be >= 0, is {}".format(i))
+
+    if j >= len(string):
+        raise IndexError("j must be < len(string), is {}".format(j))
+
+    if i > j:
+        raise IndexError("i must be <= j. (i = {}, j = {})".format(i, j))
 
     res = 0
     mult = 1
@@ -149,12 +186,10 @@ def find_all_N(string, words, N, res_list=None, P=31):
     """
     Find all words of some fixed length N using Rabin-Karp.
 
-    TODO: implement Rolling Hash to get expected running time of O(M+N)
-
-    NOTE: let us be thankful that ord() takes into account Unicode:
-    https://docs.python.org/2/library/functions.html#ord
-
     """
+    # NOTE: let us be thankful that ord() takes into account Unicode:
+    # https://docs.python.org/2/library/functions.html#ord
+
     for word in words:
         if len(word) != N:
             raise ValueError("{} with length = {} is not of required length = {}".format(word,
@@ -197,6 +232,8 @@ def find_all_N(string, words, N, res_list=None, P=31):
             t2 = ord(string[i+N-1])
             rhash = ((rhash - t1) * P) + t2
         else:
+            # NOTE: this occurs exactly once, at the beginning of the
+            # string we're examining.
             rhash = hash_substr(string, i, i+N-1)
         
         if rhash in table:
