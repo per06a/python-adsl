@@ -207,15 +207,8 @@ def find_all_N(string, words, N, res_list=None, P=31):
     table = {hash_str(word, N): word for word in words}
     # Compute the powers table for some prime P. This lets us compute
     # the rolling hash in expected constant time
-    pow_table = [None for x in range(0, N)]
-    i = 0
-    mult = 1
 
-    while i < N:
-        pow_table[i] = mult
-        mult *= P
-        i += 1
-
+    max_pow = pow(P, N-1)
     rhash = None
     # NOTE: using xrange (for Python2) for this since M can be larger,
     # and xrange is an iterator. For Python3, xrange is defined in this module as range
@@ -226,7 +219,7 @@ def find_all_N(string, words, N, res_list=None, P=31):
         # constant time.
         if rhash is not None:
             # Starting term of the previous hash value.
-            t1 = ord(string[i-1]) * pow_table[N-1]
+            t1 = ord(string[i-1]) * max_pow
             # Ending term of the current hash value. It is multiplied
             # by P^0, which is always 1. So just omit for brevity.
             t2 = ord(string[i+N-1])
