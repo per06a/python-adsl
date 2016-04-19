@@ -187,7 +187,7 @@ def find_all_N(string, words, N, res_list=None, P=31):
     Find all words of some fixed length N using Rabin-Karp.
 
     """
-    # NOTE: let us be thankful that ord() takes into account Unicode:
+    # NOTE: let's be thankful that ord() takes into account Unicode:
     # https://docs.python.org/2/library/functions.html#ord
 
     for word in words:
@@ -205,29 +205,44 @@ def find_all_N(string, words, N, res_list=None, P=31):
 
     # Table of hashes to words
     table = {hash_str(word, N): word for word in words}
-    # Compute the powers table for some prime P. This lets us compute
-    # the rolling hash in expected constant time
 
     max_pow = pow(P, N-1)
     rhash = None
-    # NOTE: using xrange (for Python2) for this since M can be larger,
-    # and xrange is an iterator. For Python3, xrange is defined in this module as range
-    for i in xrange(0, M - N + 1):
+    ln = M - N + 1
 
+    # Unroll the loop once so that we don't check conditionals inside
+    # of the loop and compute the initial rolling hash
+    i = 0
+    rhash = hash_substr(string, i, i+N-1)
+        
+    if rhash in table:
+        word = table[rhash]
+        match = True
+
+        j = 0
+        while j < N:
+            if string[j+i] != word[j]:
+                match = False
+                break
+            j += 1
+
+        if match:
+            # (word, start, end)
+            res.append((word, i, i+N))
+    
+    i = 1
+    while i < ln:
         # Rolling hash function of Rabin-Karp. This is based on the
         # observation that H(i+1) can be computed from H(i) in
         # constant time.
-        if rhash is not None:
-            # Starting term of the previous hash value.
-            t1 = ord(string[i-1]) * max_pow
-            # Ending term of the current hash value. It is multiplied
-            # by P^0, which is always 1. So just omit for brevity.
-            t2 = ord(string[i+N-1])
-            rhash = ((rhash - t1) * P) + t2
-        else:
-            # NOTE: this occurs exactly once, at the beginning of the
-            # string we're examining.
-            rhash = hash_substr(string, i, i+N-1)
+
+        # Starting term of the previous hash value.
+        # t1 = ord(string[i-1]) * max_pow
+
+        # Ending term of the current hash value. It is multiplied
+        # by P^0, which is always 1. So just omit for brevity.
+        # t2 = ord(string[i+N-1])
+        rhash = ((rhash - (ord(string[i-1]) * max_pow)) * P) + ord(string[i+N-1])
         
         if rhash in table:
             word = table[rhash]
@@ -242,14 +257,18 @@ def find_all_N(string, words, N, res_list=None, P=31):
             match = True
 
             # Use range since N is typically small
-            for j in range(0, N):
+            j = 0
+            while j < N:
                 if string[j+i] != word[j]:
                     match = False
                     break
+                j += 1
 
             if match:
                 # (word, start, end)
                 res.append((word, i, i+N))
+
+        i += 1
         
     return res
 
