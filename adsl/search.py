@@ -20,30 +20,29 @@ if sys.version_info.major >= 3:
 
 def binsearch(array, elem, left=None, right=None, cmp_func=cmp):
 
-    """
-    Classic binary search algorithm.
+    """Classic binary search algorithm.
 
     Args:
-    array (sequence): the sequence of elements that we are searching
+        array (sequence): the sequence of elements that we are searching
 
-    elem (object): the element that we are searching for
+        elem (object): the element that we are searching for
 
-    left (int): the lower bound index of the sub-sequence to
-    search for the element. Default is None, in which case it will
-    start at position 0.
+        left (int): the lower bound index of the sub-sequence to
+        search for the element. Default is None, in which case it will
+        start at position 0.
 
-    right (int): the upper bound index of the sub-sequence to
-    search for the element. Default is None, in which case it will
-    start at len(array) - 1.
+        right (int): the upper bound index of the sub-sequence to
+        search for the element. Default is None, in which case it will
+        start at len(array) - 1.
 
-    cmp_func (function): function to compare two arbitrary
-    elements. Must conform to the "negative for e1 < e2, 0 for e1 ==
-    e2, positive for e1 > e2" comparison conventions. Default is the
-    build-in Python 'cmp' function.
+        cmp_func (function): function to compare two arbitrary
+        elements. Must conform to the "negative for e1 < e2, 0 for e1 ==
+        e2, positive for e1 > e2" comparison conventions. Default is the
+        build-in Python 'cmp' function.
 
     Returns: 
-    int: If the element is found in the sequence, the first
-    position that it was found at. Else, None.
+        int: If the element is found in the sequence, the first
+        position that it was found at. Else, None.
 
     """
     res = None
@@ -75,6 +74,66 @@ def binsearch(array, elem, left=None, right=None, cmp_func=cmp):
             left = pivot + 1
 
     return res
+
+def binsearch_bounds(array, elem):
+    
+    """Find the (lower, upper) bounds of some element in the array.
+
+    Args:
+        array (list): a Python ArrayList of elements
+        elem (object): the element to search for
+
+    Returns:
+        tuple(int, int): the (lower, upper) integer bounds (0-index)
+        where elem is found in the array. If elem is not found, return
+        None.
+
+    Todo:
+        Support comparison function for element.
+
+    """
+
+    pos = binsearch(array, elem)
+
+    if pos is None:
+        return None
+
+    lb = pos
+    left = 0
+    right = pos - 1
+
+    while left <= right:
+        
+        pivot = int((left+right)/2.0)
+        pval = array[pivot]
+
+        if elem == pval and (lb is None or pivot < lb):
+            lb = pivot
+
+        elif elem < pval:
+            right = pivot - 1
+
+        else:
+            left = pivot + 1
+
+    ub = pos
+    left = pos + 1
+    right = len(array) - 1
+
+    while left <= right:
+        pivot = int((left+right)/2.0)
+        pval = array[pivot]
+
+        if elem == pval and (ub is None or pivot > ub):
+            ub = pivot
+
+        elif elem < pval:
+            right = pivot - 1
+
+        else:
+            left = pivot + 1
+
+    return (lb, ub)
 
 def quickselect(array, K):
     """
